@@ -11,7 +11,8 @@ scalar=pickle.load(open('scaling.pkl','rb')) # Load the standardizing pickle fil
 def home():
     return render_template('home.html')
 
-# Lets create a predict api
+# Lets create a predict api. This is a POST request where data will be collected using POSTMAN.
+# The data will be passed through scalar transformation and then through a regression model which gives the o/p
 @app.route('/predict_api',methods=['POST']) 
 def predict_api():
     data=request.json[data]  # whatever input we give for prediction will be in json format and saved in data variable.
@@ -23,11 +24,20 @@ def predict_api():
     print(np.array(list(data.values())).reshape(1,-1))
     new_data=scalar.transform(np.array(list(data.values())).reshape(1,-1))
     output=regmodel.predict(new_data)
-    print(output[0])
+    print(output[0])  # usually we get o/p as a 2d array. we will take first value. Refer ipynb note
     return jsonify(output[0])
     
 
+# Instead of creating an api, we will create a small webapp itself which receives some inputs and after submission it gives o/p
+# USer will manually inputs all the individual feature values through an html form. From there we will get the data here at app.py
 
+@app.route('/predict',methods=['POST'])
+def predict():
+    data=[float(x) for x in request.form.values()]
+    final_input=scalar.transform(np.array(data).reshape(1,-1))
+    print(final_input)
+    output=regmodel.predict(final_input)[0]
+    return render_template("home.html",prediction_text="The House price prediction is {}".format(output))
 
 
 if __name__=="__main__":
